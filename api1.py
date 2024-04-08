@@ -10,9 +10,9 @@ async def upload_image(image: UploadFile = File(...)):
     
     # Random acknowledgment statement
     acknowledgments = [
-        f"Image '{image.filename}' Glaucoma : True",
-        f"Image '{image.filename}' Glaucoma : False",
+        f"Image '{image.filename}' True",
+        f"Image '{image.filename}' False",
     ]
     acknowledgment = random.choice(acknowledgments)
     
-    return {"filename": image.filename, "acknowledgment": acknowledgment}
+    return { "Glaucoma": acknowledgment}
