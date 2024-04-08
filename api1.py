@@ -1,62 +1,36 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from PIL import Image
 import numpy as np
 from io import BytesIO
-from PIL import Image
-import tensorflow as tf
+import pickle
 
 app = FastAPI()
 
-# Allow any origin
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-MODEL = tf.keras.models.load_model("./small_model_pipeline.pkl")
-
-# Class names for the two classes
-CLASS_NAMES = ["Glaucoma" , "none"]
-
-
-@app.get("/ping")
-async def ping():
-    return "Hello, I am alive"
-
-
-def read_file_as_image(data) -> np.ndarray:
-    image = np.array(Image.open(BytesIO(data)))
-    return image
-
+# Load the saved model
+model = pickle.load(open('small_model_pipeline.pkl', 'rb'))
+#scaler = pickle.load(open('Glaucoma_scaker.pkl', 'rb'))
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
-    image = read_file_as_image(await file.read())
-    img_batch = np.expand_dims(image, 0)
+async def predict_image(file: UploadFile = File(...)):
+    # Check if the uploaded file is an image
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=415, detail="Unsupported media type")
 
-    predictions = MODEL.predict(img_batch)
+    # Read the image file
+    contents = await file.read()
+    image = Image.open(BytesIO(contents))
 
-    # Dynamic thresholding based on the predicted class
-    if CLASS_NAMES[np.argmax(predictions[0])] == "Glaucoma":
-        threshold = 0.5  # Invert the threshold for "malignant" class
-    else:
-        threshold = 0.5  # Use the same threshold for "benign" class
+    # Preprocess the image
+    image = image.resize((150, 150))  # Resize to match model input size
+    img_array = np.array(image)  # Convert to numpy array
+    img_array = img_array.reshape(1, -1)  # Flatten the image
+    img_array = scaler.transform(img_array)  # Scale the image data
 
-    if predictions[0] >= threshold:
-        predicted_class = "Glaucoma"
-    else:
-        predicted_class = "None"
-
-    confidence = np.max(predictions[0])
+    # Make predictions using the loaded model
+    prediction = model.predict(img_array)
+    result = True if prediction[0][0] > 0.5 else False
 
     return {
-        'class': predicted_class,
-        'confidence': float(confidence)
+        "Glaucoma": result,
+        "Confidence": float(prediction[0][0])
     }
-
-if __name__ == "__main__":
-    uvicorn.run(app, host='0.0.0.0', port=8000)
