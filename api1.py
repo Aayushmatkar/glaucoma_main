@@ -7,7 +7,7 @@ import pickle
 app = FastAPI()
 
 # Load the saved model
-model = pickle.load(open('small_model_pipeline.pkl', 'rb'))
+model = pickle.load(open('small_model.pkl', 'rb'))
 #scaler = pickle.load(open('Glaucoma_scaker.pkl', 'rb'))
 
 @app.post("/predict")
