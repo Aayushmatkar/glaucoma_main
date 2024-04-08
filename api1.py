@@ -6,9 +6,8 @@ import pickle
 
 app = FastAPI()
 
-# Load the saved model
-model = pickle.load(open('small_model.pkl', 'rb'))
-#scaler = pickle.load(open('Glaucoma_scaker.pkl', 'rb'))
+with open('resnet_model.pkl', 'rb') as f:
+    model = pickle.load(f)
 
 @app.post("/predict")
 async def predict_image(file: UploadFile = File(...)):
