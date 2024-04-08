@@ -8,7 +8,7 @@ from tensorflow.keras.models import load_model
 app = FastAPI()
 
 # Load the .h5 model
-model = load_model('my_model.keras')
+model = load_model('small_model_1.h5')
 
 @app.post("/predict")
 async def predict_image(file: UploadFile = File(...)):
