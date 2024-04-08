@@ -2,12 +2,13 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from PIL import Image
 import numpy as np
 from io import BytesIO
-import pickle
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 
 app = FastAPI()
 
-with open('resnet_model.pkl', 'rb') as f:
-    model = pickle.load(f)
+# Load the .h5 model
+model = load_model('small_model_1.h5')
 
 @app.post("/predict")
 async def predict_image(file: UploadFile = File(...)):
@@ -22,8 +23,8 @@ async def predict_image(file: UploadFile = File(...)):
     # Preprocess the image
     image = image.resize((150, 150))  # Resize to match model input size
     img_array = np.array(image)  # Convert to numpy array
-    img_array = img_array.reshape(1, -1)  # Flatten the image
-    img_array = scaler.transform(img_array)  # Scale the image data
+    img_array = img_array / 255.0  # Normalize pixel values to [0, 1]
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
 
     # Make predictions using the loaded model
     prediction = model.predict(img_array)
