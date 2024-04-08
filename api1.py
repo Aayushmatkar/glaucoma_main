@@ -3,7 +3,7 @@ from fastapi import FastAPI, UploadFile, File
 
 app = FastAPI()
 
-@app.post("/upload/")
+@app.post("/predict")
 async def upload_image(image: UploadFile = File(...)):
     contents = await image.read()
     # Here you can process the image contents as per your requirements
