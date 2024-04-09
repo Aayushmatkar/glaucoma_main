@@ -1,6 +1,6 @@
 import random
 from fastapi import FastAPI, UploadFile, File
-
+from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 # Setup CORS
